@@ -1,36 +1,85 @@
 import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
-import { getCategoryNews, getTopHeadLines } from "../services/apiServices";
+import {
+  getCategoryNews,
+  getTopHeadLines,
+  searchNews,
+} from "../services/apiServices";
 import Loader from "../components/Loader";
 import NewsCard from "../components/NewsCard";
 import Category from "../components/Category";
+import SearchBar from "../components/SearchBar";
+import { TbCurrencyKroneSwedish } from "react-icons/tb";
 
 const Home = () => {
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState("general");
+  const [search, setSearch] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+
+  // useEffect(() => {
+  //   const fetchNews = async () => {
+  //     try {
+  //       setLoading(true);
+  //       let data;
+  //       if (category === "general") {
+  //         const articles = await getTopHeadLines();
+  //         console.log("Fetched Articles:", articles); // Now logged properly
+  //         setNews(articles || []); // Ensure news is always an array
+  //       } else {
+  //         data = await getCategoryNews(category);
+  //       }
+  //     } catch (error) {
+  //       console.error("Failed to fetch news:", error);
+  //       toast.error("Something went wrong :(");
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   fetchNews();
+  // }, [category]);
 
   useEffect(() => {
-    const fetchNews = async () => {
-      try {
-        let data;
-        if (category === "general") {
-          const articles = await getTopHeadLines();
-          console.log("Fetched Articles:", articles); // Now logged properly
-          setNews(articles || []); // Ensure news is always an array
-        } else {
-          data = await getCategoryNews(category);
-        }
-      } catch (error) {
-        console.error("Failed to fetch news:", error);
-        toast.error("Something went wrong :(");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchNews();
-  }, []);
+  }, [category]);
+
+  const fetchNews = async () => {
+    try {
+      setLoading(true);
+
+      const articles =
+        category === "general"
+          ? await getTopHeadLines()
+          : await getCategoryNews(category);
+
+      setNews(articles || []);
+    } catch (error) {
+      console.error("Failed to fetch news:", error);
+      toast.error("Something went wrong :(");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = async () => {
+    if (!search.trim()) {
+      toast.error("Please Enter Something to Search");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setIsSearching(true);
+      const data = await searchNews(search);
+      setNews(data);
+    } catch (error) {
+      console.log(error);
+      toast.error("Search Failed");
+    } finally {
+    }
+  };
 
   if (loading) {
     return <Loader size="medium" />;
@@ -83,6 +132,18 @@ const Home = () => {
           Explore News ↓
         </button>
       </div>
+
+      <SearchBar
+        search={search}
+        setSearch={setSearch}
+        handleSearch={handleSearch}
+      />
+
+      <Category category={category} setCategory={setCategory} />
+
+      <h2 className="text-3xl font-bold mb-8 capitalize">
+        {category === "general" ? "Top Headlines" : `${category} News`}
+      </h2>
 
       {/* News Grid */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 py-6">
