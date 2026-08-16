@@ -68,7 +68,6 @@ const Home = () => {
       toast.error("Please Enter Something to Search");
       return;
     }
-
     try {
       setLoading(true);
       setIsSearching(true);
@@ -78,6 +77,7 @@ const Home = () => {
       console.log(error);
       toast.error("Search Failed");
     } finally {
+      setLoading(false);
     }
   };
 
@@ -139,23 +139,61 @@ const Home = () => {
         handleSearch={handleSearch}
       />
 
-      <Category category={category} setCategory={setCategory} />
+      {!isSearching && (
+        <Category category={category} setCategory={setCategory} />
+      )}
 
-      <h2 className="text-3xl font-bold mb-8 capitalize">
-        {category === "general" ? "Top Headlines" : `${category} News`}
-      </h2>
+      <div className="flex justify-between items-center my-8">
+        <h2 className="text-3xl font-bold capitalize">
+          {isSearching
+            ? `Search Result for ${search}`
+            : category === "general"
+              ? "Top Headlines"
+              : `${category} News`}
+        </h2>
 
-      {/* News Grid */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 py-6">
-        {news && news.length > 0 ? (
-          // Use parentheses () for implicit return in map
-          news.map((n, index) => <NewsCard key={n.url || index} news={n} />)
-        ) : (
-          <p className="text-center col-span-full text-gray-500">
-            No news articles available.
-          </p>
+        {/* Clear Search */}
+
+        {isSearching && (
+          <button
+            onClick={() => {
+              setSearch("");
+              setIsSearching(false);
+              setCategory("general");
+              fetchNews();
+            }}
+            className="bg-gray-900 text-white rounded-lg px-5 py-2 text-lg font-medium hover:bg-gray-700"
+          >
+            Clear Search
+          </button>
         )}
       </div>
+
+      {/* <h2 className="text-3xl font-bold mb-8 capitalize">
+        {category === "general" ? "Top Headlines" : `${category} News`}
+      </h2> */}
+
+      {loading ? (
+        <Loader />
+      ) : news.length === 0 ? (
+        <div className="text-center py-16">
+          <h2 className="text-2xl font-bold">No News Found</h2>
+          <p className="text-gray-500 mt-2">
+            Try Searching with another keyword
+          </p>
+        </div>
+      ) : (
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 py-6">
+          {news && news.length > 0 ? (
+            // Use parentheses () for implicit return in map
+            news.map((n, index) => <NewsCard key={n.url || index} news={n} />)
+          ) : (
+            <p className="text-center col-span-full text-gray-500">
+              No news articles available.
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 };
